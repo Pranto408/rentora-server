@@ -1,18 +1,24 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
-
 const express = require("express");
 const dotenv = require("dotenv");
-dotenv.config();
 const cors = require("cors");
+
+dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.use(cors());
+// ─── Middleware ───────────────────────────────────────────────────────────────
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
-const uri = process.env.MONGODB_URI;
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
+// ─── MongoDB ──────────────────────────────────────────────────────────────────
+const client = new MongoClient(process.env.MONGODB_URI, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
@@ -22,24 +28,44 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-    // Send a ping to confirm a successful connection
+    await client.connect();
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!",
-    );
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
+    console.log("✅ Connected to MongoDB!");
+
+    const db = client.db(process.env.DB_NAME);
+
+    // ─── Import route initializers ─────────────────────────────────────────
+    const initAuthRoutes = require("./routes/auth");
+    const initPropertyRoutes = require("./routes/properties");
+    const initBookingRoutes = require("./routes/bookings");
+    const initFavoriteRoutes = require("./routes/favorites");
+    const initReviewRoutes = require("./routes/reviews");
+    const initPaymentRoutes = require("./routes/payments");
+    const initTransactionRoutes = require("./routes/transactions");
+    const initUserRoutes = require("./routes/users");
+
+    // ─── Register routes ───────────────────────────────────────────────────
+    app.use("/api/auth", initAuthRoutes(db));
+    app.use("/api/properties", initPropertyRoutes(db));
+    app.use("/api/bookings", initBookingRoutes(db));
+    app.use("/api/favorites", initFavoriteRoutes(db));
+    app.use("/api/reviews", initReviewRoutes(db));
+    app.use("/api/payments", initPaymentRoutes(db));
+    app.use("/api/transactions", initTransactionRoutes(db));
+    app.use("/api/users", initUserRoutes(db));
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
   }
 }
-run().catch(console.dir);
 
+run();
+
+// ─── Health check ─────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.json({ status: "Rentora API is running 🚀" });
 });
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`🚀 Server running on port ${port}`);
 });
