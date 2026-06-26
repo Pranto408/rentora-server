@@ -55,22 +55,9 @@ function initReviewRoutes(db) {
     }
   });
 
-  // ─── GET /api/reviews/:propertyId ────────────────────────────────────────
-  // Get all reviews for a specific property (public)
-  router.get("/:propertyId", async (req, res) => {
-    try {
-      const result = await reviews
-        .find({ propertyId: new ObjectId(req.params.propertyId) })
-        .sort({ createdAt: -1 })
-        .toArray();
-      res.json(result);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch reviews." });
-    }
-  });
-
   // ─── GET /api/reviews ─────────────────────────────────────────────────────
   // Get all reviews (for homepage customer reviews section — public)
+  // ⚠️ Must be BEFORE /:propertyId to avoid route conflict
   router.get("/", async (req, res) => {
     try {
       const { limit = 4 } = req.query;
@@ -78,6 +65,20 @@ function initReviewRoutes(db) {
         .find({})
         .sort({ rating: -1, createdAt: -1 })
         .limit(parseInt(limit))
+        .toArray();
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch reviews." });
+    }
+  });
+
+  // ─── GET /api/reviews/:propertyId ────────────────────────────────────────
+  // Get all reviews for a specific property (public)
+  router.get("/:propertyId", async (req, res) => {
+    try {
+      const result = await reviews
+        .find({ propertyId: new ObjectId(req.params.propertyId) })
+        .sort({ createdAt: -1 })
         .toArray();
       res.json(result);
     } catch (err) {
