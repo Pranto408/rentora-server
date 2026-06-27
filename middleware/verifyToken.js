@@ -45,3 +45,4 @@ function verifyRole(...roles) {
 }
 
 module.exports = { verifyToken, verifyRole };
+
