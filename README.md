@@ -6,7 +6,7 @@ Backend API server for the Rentora Property Rental & Booking Platform. Handles a
 
 ## 🌐 Live URL
 
-**[https://rentora-server.vercel.app](https://rentora-server.vercel.app)**
+**[https://rentora-client-yav5.vercel.app](https://rentora-client-yav5.vercel.app)**
 
 ---
 
